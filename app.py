@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from PIL import Image
 import io
+import random
 
 # Load environment variables
 load_dotenv()
@@ -72,14 +73,68 @@ selected_style = st.sidebar.selectbox(
     help="Select an art style to automatically apply to your prompt"
 )
 
+# Image size options
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📐 Image Size")
+
+image_sizes = {
+    "Square (1024x1024)": (1024, 1024),
+    "Portrait (768x1024)": (768, 1024),
+    "Landscape (1024x768)": (1024, 768),
+    "Wide (1280x720)": (1280, 720),
+    "Ultra Wide (1920x1080)": (1920, 1080),
+    "Small Square (512x512)": (512, 512)
+}
+
+selected_size = st.sidebar.selectbox(
+    "Image Dimensions:",
+    options=list(image_sizes.keys()),
+    index=0,
+    help="Choose the size of the generated image"
+)
+
+# Random prompt generator
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🎲 Random Generation")
+
+random_prompts = [
+    "A majestic mountain landscape at golden hour",
+    "A cozy coffee shop on a rainy day",
+    "A futuristic cityscape with flying cars",
+    "A magical forest with glowing mushrooms",
+    "A peaceful beach at sunset",
+    "A steampunk airship in the clouds",
+    "A dragon sleeping on a pile of treasure",
+    "A astronaut exploring an alien planet",
+    "A Japanese garden with cherry blossoms",
+    "A medieval castle on a cliff",
+    "A cyberpunk street with neon signs",
+    "A lighthouse during a storm",
+    "A fantasy library with floating books",
+    "A vintage car on route 66",
+    "A underwater coral reef city",
+    "A snowy cabin in the woods",
+    "A hot air balloon over countryside",
+    "A mystical portal in ancient ruins",
+    "A robot reading in a library",
+    "A treehouse village in giant trees"
+]
+
+if st.sidebar.button("🎲 Generate Random Image", help="Click to generate a random image with random style and size"):
+    st.session_state.random_mode = True
+    st.session_state.random_prompt = random.choice(random_prompts)
+    st.session_state.random_style = random.choice(list(art_styles.keys()))
+    st.session_state.random_size = random.choice(list(image_sizes.keys()))
+    st.rerun()
+
 # Additional sidebar options
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 💡 Quick Tips")
 st.sidebar.markdown("""
-- Choose a style above
+- Choose a style and size above
 - Describe your subject clearly
 - Add details about colors and lighting
-- The style will be added automatically
+- Click the dice for random generation
 """)
 
 # App header
@@ -157,6 +212,17 @@ with st.expander("⚙️ Advanced Settings"):
 # Generate button
 generate_button = st.button("🚀 Generate Image")
 
+# Check if random mode is activated
+if 'random_mode' in st.session_state and st.session_state.random_mode:
+    generate_button = True
+    prompt = st.session_state.random_prompt
+    selected_style = st.session_state.random_style
+    selected_size = st.session_state.random_size
+    st.session_state.random_mode = False
+
+    # Display what was randomly selected
+    st.info(f"🎲 **Random Generation Mode**\n\n**Prompt:** {prompt}\n\n**Style:** {selected_style}\n\n**Size:** {selected_size}")
+
 # Image generation logic
 if generate_button:
     if not prompt.strip():
@@ -170,15 +236,21 @@ if generate_button:
             else:
                 full_prompt = prompt
 
+            # Get selected image dimensions
+            width, height = image_sizes[selected_size]
+
             # Show the final prompt being used
             with st.expander("📝 Final Prompt Being Used"):
                 st.write(full_prompt)
+                st.write(f"**Size:** {width}x{height}")
 
             with st.spinner("🎨 Generating your image... This may take 10-30 seconds..."):
                 # Generate image using InferenceClient
                 image = client.text_to_image(
                     prompt=full_prompt,
-                    model=MODEL_NAME
+                    model=MODEL_NAME,
+                    width=width,
+                    height=height
                 )
 
                 # Display the generated image
