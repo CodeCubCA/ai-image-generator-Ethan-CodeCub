@@ -49,21 +49,14 @@ st.sidebar.markdown("Choose your preferred art style")
 # Art style options
 art_styles = {
     "All Styles": "",
-    "Digital Art": "digital art style",
-    "Oil Painting": "oil painting style",
-    "Watercolor": "watercolor painting style",
-    "Pastel Drawing": "soft pastel drawing style",
-    "Sketch/Pencil": "pencil sketch style",
-    "Photorealistic": "photorealistic, high quality photograph",
-    "3D Render": "3D render, CGI",
-    "Anime/Manga": "anime style illustration",
-    "Comic Book": "comic book art style",
-    "Pop Art": "pop art style",
-    "Abstract": "abstract art style",
-    "Impressionist": "impressionist painting style",
-    "Cyberpunk": "cyberpunk art style",
-    "Fantasy Art": "fantasy art style",
-    "Vintage/Retro": "vintage retro art style"
+    "None": "",
+    "Anime": ", anime style, vibrant colors, Studio Ghibli inspired, detailed illustration",
+    "Realistic": ", photorealistic, highly detailed, 8K resolution, professional photography",
+    "Digital Art": ", digital painting, artstation trending, concept art, highly detailed",
+    "Watercolor": ", watercolor painting, soft colors, artistic, gentle brushstrokes",
+    "Oil Painting": ", oil painting, classical art, textured, rich colors, fine art",
+    "Cyberpunk": ", cyberpunk style, neon lights, futuristic, sci-fi, dark atmosphere",
+    "Fantasy": ", fantasy art, magical, enchanted, epic, mystical atmosphere"
 }
 
 selected_style = st.sidebar.selectbox(
