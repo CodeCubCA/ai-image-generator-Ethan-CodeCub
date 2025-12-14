@@ -5,6 +5,7 @@ import os
 from PIL import Image
 import io
 import random
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -158,6 +159,10 @@ def get_client():
 
 client = get_client()
 
+# Initialize image history in session state
+if 'image_history' not in st.session_state:
+    st.session_state.image_history = []
+
 # Main input area
 prompt = st.text_area(
     "Enter your image description:",
@@ -265,6 +270,17 @@ if generate_button:
                     mime="image/png"
                 )
 
+                # Add to image history
+                image_data = {
+                    'image': image,
+                    'prompt': full_prompt,
+                    'style': selected_style,
+                    'size': selected_size,
+                    'timestamp': datetime.now(),
+                    'image_bytes': byte_im
+                }
+                st.session_state.image_history.insert(0, image_data)
+
         except Exception as e:
             error_message = str(e)
 
@@ -290,6 +306,54 @@ if generate_button:
                 st.error("❌ **Error Generating Image**")
                 st.error(f"Error details: {error_message}")
                 st.info("Please try again or modify your prompt.")
+
+# Image History Gallery
+if len(st.session_state.image_history) > 0:
+    st.markdown("---")
+    st.markdown("## 🖼️ Image History")
+
+    # Header with count and clear button
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown(f"**{len(st.session_state.image_history)} images in history**")
+    with col2:
+        if st.button("🗑️ Clear History"):
+            st.session_state.image_history = []
+            st.rerun()
+
+    st.markdown("---")
+
+    # Display images in grid (3 columns)
+    for i in range(0, len(st.session_state.image_history), 3):
+        cols = st.columns(3)
+
+        for j in range(3):
+            idx = i + j
+            if idx < len(st.session_state.image_history):
+                with cols[j]:
+                    img_data = st.session_state.image_history[idx]
+
+                    # Display image
+                    st.image(img_data['image'], use_column_width=True)
+
+                    # Show prompt in expander
+                    with st.expander("📝 View Prompt"):
+                        st.write(f"**Prompt:** {img_data['prompt']}")
+                        st.write(f"**Style:** {img_data['style']}")
+                        st.write(f"**Size:** {img_data['size']}")
+                        timestamp = img_data['timestamp'].strftime("%I:%M:%S %p")
+                        st.write(f"**Generated:** {timestamp}")
+
+                    # Download button
+                    st.download_button(
+                        label="📥 Download",
+                        data=img_data['image_bytes'],
+                        file_name=f"image_{idx+1}.png",
+                        mime="image/png",
+                        key=f"download_{idx}"
+                    )
+
+                    st.markdown("<br>", unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
