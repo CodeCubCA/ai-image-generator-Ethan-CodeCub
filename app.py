@@ -48,13 +48,15 @@ st.sidebar.markdown("Choose your preferred art style")
 
 # Art style options
 art_styles = {
-    "All Styles": "",
+    "All Styles": ", use the best artistic style choice for this subject, highly detailed, professional quality",
     "None": "",
     "Anime": ", anime style, vibrant colors, Studio Ghibli inspired, detailed illustration",
     "Realistic": ", photorealistic, highly detailed, 8K resolution, professional photography",
     "Digital Art": ", digital painting, artstation trending, concept art, highly detailed",
     "Watercolor": ", watercolor painting, soft colors, artistic, gentle brushstrokes",
     "Oil Painting": ", oil painting, classical art, textured, rich colors, fine art",
+    "3D Render": ", 3D render, CGI, octane render, unreal engine, photorealistic 3D",
+    "Sketch/Pencil": ", pencil sketch, hand-drawn, detailed line art, graphite drawing",
     "Cyberpunk": ", cyberpunk style, neon lights, futuristic, sci-fi, dark atmosphere",
     "Fantasy": ", fantasy art, magical, enchanted, epic, mystical atmosphere"
 }
@@ -225,7 +227,7 @@ if generate_button:
             # Combine user prompt with selected style
             style_suffix = art_styles[selected_style]
             if style_suffix:
-                full_prompt = f"{prompt}, {style_suffix}"
+                full_prompt = f"{prompt}{style_suffix}"
             else:
                 full_prompt = prompt
 
