@@ -7,6 +7,13 @@ import io
 import random
 from datetime import datetime
 
+# Page configuration (must be first Streamlit command)
+st.set_page_config(
+    page_title="AI Image Generator",
+    page_icon="🎨",
+    layout="centered"
+)
+
 # Load environment variables
 load_dotenv()
 
@@ -18,13 +25,6 @@ except:
     HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 
 MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
-
-# Page configuration
-st.set_page_config(
-    page_title="AI Image Generator",
-    page_icon="🎨",
-    layout="centered"
-)
 
 # Initialize image history in session state (must be before sidebar)
 if 'image_history' not in st.session_state:
