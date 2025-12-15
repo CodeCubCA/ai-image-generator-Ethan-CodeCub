@@ -11,7 +11,12 @@ from datetime import datetime
 load_dotenv()
 
 # Configuration
-HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
+# Try to get token from Streamlit secrets first (for HF Spaces), then fall back to .env
+try:
+    HUGGINGFACE_TOKEN = st.secrets.get("HUGGINGFACE_TOKEN", os.getenv("HUGGINGFACE_TOKEN"))
+except:
+    HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
+
 MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
 
 # Page configuration
@@ -20,6 +25,10 @@ st.set_page_config(
     page_icon="🎨",
     layout="centered"
 )
+
+# Initialize image history in session state (must be before sidebar)
+if 'image_history' not in st.session_state:
+    st.session_state.image_history = []
 
 # Custom CSS for better UI
 st.markdown("""
@@ -133,6 +142,58 @@ st.sidebar.markdown("""
 - Click the dice for random generation
 """)
 
+# Image History in Sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🖼️ Image History")
+
+if len(st.session_state.image_history) > 0:
+    st.sidebar.markdown(f"**{len(st.session_state.image_history)} images saved**")
+
+    if st.sidebar.button("🗑️ Clear All History"):
+        st.session_state.image_history = []
+        st.rerun()
+
+    # Toggle to show/hide history
+    if 'show_history' not in st.session_state:
+        st.session_state.show_history = False
+
+    if st.sidebar.button("📂 View Image History" if not st.session_state.show_history else "📂 Hide Image History"):
+        st.session_state.show_history = not st.session_state.show_history
+        st.rerun()
+
+    # Show history if toggled
+    if st.session_state.show_history:
+        st.sidebar.markdown("---")
+        for idx, img_data in enumerate(st.session_state.image_history):
+            with st.sidebar.expander(f"Image {idx + 1}", expanded=False):
+                st.image(img_data['image'], use_column_width=True)
+                st.write(f"**Style:** {img_data['style']}")
+                st.write(f"**Size:** {img_data['size']}")
+                timestamp = img_data['timestamp'].strftime("%I:%M:%S %p")
+                st.write(f"**Time:** {timestamp}")
+
+                # Show prompt
+                if len(img_data['prompt']) > 50:
+                    st.write(f"**Prompt:** {img_data['prompt'][:50]}...")
+                else:
+                    st.write(f"**Prompt:** {img_data['prompt']}")
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.download_button(
+                        label="📥",
+                        data=img_data['image_bytes'],
+                        file_name=f"image_{idx+1}.png",
+                        mime="image/png",
+                        key=f"sidebar_download_{idx}"
+                    )
+                with col2:
+                    if st.button("🗑️", key=f"delete_{idx}"):
+                        st.session_state.image_history.pop(idx)
+                        st.rerun()
+else:
+    st.sidebar.info("No images yet. Generate some!")
+
 # App header
 st.title("🎨 AI Image Generator")
 st.markdown("Generate stunning images from text descriptions using AI")
@@ -158,10 +219,6 @@ def get_client():
     return InferenceClient(token=HUGGINGFACE_TOKEN)
 
 client = get_client()
-
-# Initialize image history in session state
-if 'image_history' not in st.session_state:
-    st.session_state.image_history = []
 
 # Main input area
 prompt = st.text_area(
@@ -306,54 +363,6 @@ if generate_button:
                 st.error("❌ **Error Generating Image**")
                 st.error(f"Error details: {error_message}")
                 st.info("Please try again or modify your prompt.")
-
-# Image History Gallery
-if len(st.session_state.image_history) > 0:
-    st.markdown("---")
-    st.markdown("## 🖼️ Image History")
-
-    # Header with count and clear button
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown(f"**{len(st.session_state.image_history)} images in history**")
-    with col2:
-        if st.button("🗑️ Clear History"):
-            st.session_state.image_history = []
-            st.rerun()
-
-    st.markdown("---")
-
-    # Display images in grid (3 columns)
-    for i in range(0, len(st.session_state.image_history), 3):
-        cols = st.columns(3)
-
-        for j in range(3):
-            idx = i + j
-            if idx < len(st.session_state.image_history):
-                with cols[j]:
-                    img_data = st.session_state.image_history[idx]
-
-                    # Display image
-                    st.image(img_data['image'], use_column_width=True)
-
-                    # Show prompt in expander
-                    with st.expander("📝 View Prompt"):
-                        st.write(f"**Prompt:** {img_data['prompt']}")
-                        st.write(f"**Style:** {img_data['style']}")
-                        st.write(f"**Size:** {img_data['size']}")
-                        timestamp = img_data['timestamp'].strftime("%I:%M:%S %p")
-                        st.write(f"**Generated:** {timestamp}")
-
-                    # Download button
-                    st.download_button(
-                        label="📥 Download",
-                        data=img_data['image_bytes'],
-                        file_name=f"image_{idx+1}.png",
-                        mime="image/png",
-                        key=f"download_{idx}"
-                    )
-
-                    st.markdown("<br>", unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
