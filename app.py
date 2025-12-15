@@ -7,7 +7,7 @@ import io
 import random
 from datetime import datetime
 
-# Page configuration (must be first Streamlit command)
+# IMPORTANT: Page configuration MUST be the first Streamlit command
 st.set_page_config(
     page_title="AI Image Generator",
     page_icon="🎨",
