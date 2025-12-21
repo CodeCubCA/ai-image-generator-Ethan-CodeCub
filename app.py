@@ -27,7 +27,7 @@ try:
 except (FileNotFoundError, KeyError):
     HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 
-MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
+MODEL_NAME = "stabilityai/stable-diffusion-xl-base-1.0"
 
 # Initialize image history in session state (must be before sidebar)
 if 'image_history' not in st.session_state:
@@ -265,6 +265,7 @@ if 'js_injected' not in st.session_state:
 # Additional settings in an expander
 with st.expander("⚙️ Advanced Settings"):
     st.info(f"**Model:** {MODEL_NAME}")
+    st.warning("Note: Switched to Stable Diffusion XL due to FLUX rate limits")
     st.markdown("""
     **Tips for better results:**
     - Be specific and descriptive
@@ -376,6 +377,6 @@ st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
     <p>Powered by HuggingFace 🤗 | Built with Streamlit</p>
-    <p style='font-size: 12px;'>Using model: black-forest-labs/FLUX.1-schnell</p>
+    <p style='font-size: 12px;'>Using model: stabilityai/stable-diffusion-xl-base-1.0</p>
 </div>
 """, unsafe_allow_html=True)
