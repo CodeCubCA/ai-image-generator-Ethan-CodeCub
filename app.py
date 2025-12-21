@@ -2,9 +2,9 @@ import streamlit as st
 from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
 import os
-from PIL import Image
 import io
 import random
+import warnings
 from datetime import datetime
 
 # IMPORTANT: Page configuration MUST be the first Streamlit command
@@ -14,6 +14,9 @@ st.set_page_config(
     layout="centered"
 )
 
+# Hide Streamlit warning messages
+warnings.filterwarnings('ignore')
+
 # Load environment variables
 load_dotenv()
 
@@ -21,7 +24,7 @@ load_dotenv()
 # Try to get token from Streamlit secrets first (for HF Spaces), then fall back to .env
 try:
     HUGGINGFACE_TOKEN = st.secrets.get("HUGGINGFACE_TOKEN", os.getenv("HUGGINGFACE_TOKEN"))
-except:
+except (FileNotFoundError, KeyError):
     HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 
 MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
@@ -229,31 +232,35 @@ prompt = st.text_area(
     key="prompt_input"
 )
 
-# Add custom JavaScript for Enter key behavior
-st.markdown("""
-    <script>
-    const doc = window.parent.document;
-    const textArea = doc.querySelector('textarea[aria-label="Enter your image description:"]');
-    const generateButton = doc.querySelector('button[kind="primary"]');
+# Add custom JavaScript for Enter key behavior (runs once per session)
+if 'js_injected' not in st.session_state:
+    st.session_state.js_injected = True
+    st.markdown("""
+        <script>
+        (function() {
+            const doc = window.parent.document;
+            const textArea = doc.querySelector('textarea[aria-label="Enter your image description:"]');
 
-    if (textArea) {
-        textArea.addEventListener('keydown', function(e) {
-            // If Enter is pressed without Shift
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                // Find and click the generate button
-                const buttons = doc.querySelectorAll('button');
-                buttons.forEach(button => {
-                    if (button.textContent.includes('Generate Image')) {
-                        button.click();
+            if (textArea && !textArea.dataset.listenerAdded) {
+                textArea.dataset.listenerAdded = 'true';
+                textArea.addEventListener('keydown', function(e) {
+                    // If Enter is pressed without Shift
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        // Find and click the generate button
+                        const buttons = doc.querySelectorAll('button');
+                        buttons.forEach(button => {
+                            if (button.textContent.includes('Generate Image')) {
+                                button.click();
+                            }
+                        });
                     }
+                    // Shift+Enter will naturally create a new line (default behavior)
                 });
             }
-            // Shift+Enter will naturally create a new line (default behavior)
-        });
-    }
-    </script>
-    """, unsafe_allow_html=True)
+        })();
+        </script>
+        """, unsafe_allow_html=True)
 
 # Additional settings in an expander
 with st.expander("⚙️ Advanced Settings"):
